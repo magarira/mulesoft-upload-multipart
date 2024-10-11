@@ -1,0 +1,8 @@
+api:
+  id: "19304992"
+  
+012_client_app:
+  user1:
+    client_id: "i5YMjZ59z5Tnk3DOUKm6KmOJRY3CmHZZ"
+    client_secret: "6FSTH4wxmZtuiZtQRkxLkUegsYOgqBxa"
+    client_name : "012_client1_app_noprod"

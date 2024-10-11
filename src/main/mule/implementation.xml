@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<sub-flow name="poc-uploadfiles-multipartFlow" doc:id="5899d9a3-203b-4645-bb8c-a0a84e751790" >
+		<logger level="INFO" doc:name="Logger" doc:id="56a9a268-3b8b-4143-8ab9-495d46b65943" />
+		<ee:transform doc:name="Transform Message" doc:id="53443565-ebb6-4494-bea5-c98ad2d0e7bb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[output application/json
+import toBase64 from dw::core::Binaries
+---
+read(payload.parts.values.content,'application/json') ++ 
+({
+	"documents" : 
+		payload.parts.*documents map((value,index) -> {
+			
+				"nombre"	 : value.headers."Content-Disposition".filename,
+				"longitud": {
+					"size-bytes" : sizeOf(value.content) ,
+					"size-Kilobytes" : (sizeOf(value.content) / 1024) ,
+					"size-Megabytes" : ((sizeOf(value.content)  / 1024) /1024) 
+				},
+				"content" : toBase64(value.content)
+			
+		})
+}) as Object]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Calcular total tamaño ficheros" doc:id="9e95973f-1b58-4256-a854-3c7bc2bd21e3" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="longitudTotalDocumentos" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.documents.longitud."size-Megabytes" reduce ((item, acc) -> item + acc)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<validation:is-true doc:name="Tamaño de adjuntos menor de 5Mb" doc:id="8f628875-4abe-4f66-8e40-08e26ada46e8" expression="#[vars.longitudTotalDocumentos &lt;= 5]" message='#["E001_No se admiten adjuntos de más de 5Mb (" as String ++ (vars.longitudTotalDocumentos) as String {format: "0.00"} ++ " Mb)"]' />
+		<logger level="INFO" doc:name="Logger1" doc:id="26e6781f-6895-4116-92c8-29e9e63b3ac7" />
+	</sub-flow>
+</mule>

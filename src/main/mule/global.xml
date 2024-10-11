@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:bti="http://www.mulesoft.org/schema/mule/ee/bti"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/bti http://www.mulesoft.org/schema/mule/ee/bti/current/mule-bti-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="1d4a335d-fd5a-4d67-b2ba-5d9013e49379" file="common-config.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="a4b53ee0-d126-4589-addb-0df3fdce5df2" file="${mule.env}-config.yaml" />
+	<global-property doc:name="Global Property" doc:id="59f376e6-4479-4e5b-b5a5-5b133ad3f247" name="mule.env" value="${mule.env}" />
+	<global-property doc:name="Global Property" doc:id="32202365-43f7-42c5-9c7a-7795058a441c" name="mule.key" value="key" />
+	
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="1795a0b8-b2f7-419f-8d5a-7e71e3f11eca" flowRef="poc-uploadfiles-multipart-api-main-flow" />
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="53015c7a-5520-465d-a0e4-61ffabd0474f" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="1639944d-ba0a-4f34-ad0b-103adf56d686" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	
+
+</mule>

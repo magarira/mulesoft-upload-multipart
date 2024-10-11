@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="poc-uploadfiles-multipartFlow" doc:id="5b58635b-0994-40d5-a48a-11e28d09d8e9" >
+		<http:listener doc:name="Listener" doc:id="a17e0234-d3ca-4f21-9bce-cea929dc00da" path="/uploadFile" config-ref="HTTP_Listener_config">
+			<http:response statusCode="#[vars.httpStatus]" />
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[output application/json --- payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="91ce3274-7a99-4b34-b0d9-1bd44abf35db" />
+		<ee:transform doc:name="Transform Message" doc:id="e574259d-e87f-4138-83dd-cdefcc0e3382" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[output application/json
+import toBase64 from dw::core::Binaries
+---
+read(payload.parts.values.content,'application/json') ++ 
+({
+	"documents" : 
+		payload.parts.*documents map((value,index) -> {
+			
+				"nombre"	 : value.headers."Content-Disposition".filename,
+				"longitud": {
+					"size-bytes" : sizeOf(value.content) ,
+					"size-Kilobytes" : (sizeOf(value.content) / 1024) ,
+					"size-Megabytes" : ((sizeOf(value.content)  / 1024) /1024) 
+				},
+				"content" : toBase64(value.content)
+			
+		})
+}) as Object]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Calcular total tamaño ficheros" doc:id="8fd742c6-6e9d-4dcd-86cd-e664b0652453" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="longitudTotalDocumentos" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.documents.longitud."size-Megabytes" reduce ((item, acc) -> item + acc)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<validation:is-true doc:name="Tamaño de adjuntos menor de 5Mb" doc:id="f1846ceb-4d6f-4e09-b125-e1afa9a85d36" expression="#[vars.longitudTotalDocumentos &lt;= 5]" message='#["E001_No se admiten adjuntos de más de 5Mb (" as String ++ (vars.longitudTotalDocumentos) as String {format: "0.00"} ++ " Mb)"]' />
+		<logger level="INFO" doc:name="Logger" doc:id="0b91e742-167e-4155-930d-871bd1c6e404" />
+		<error-handler ref="global-error-handler" />
+	</flow>
+</mule>
